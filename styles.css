@@ -25,27 +25,27 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ground: #251531;
-    --panel: #2e1c3d;
-    --panel-2: #1d1027;
+    --ground: #2a1c25;
+    --panel: #332333;
+    --panel-2: #221822;
     --ink: #f4e9f1;
-    --ink-soft: #c2a9cc;
+    --ink-soft: #d1b9c2;
     --rose: #ee8fb4;
-    --orchid: #b79adb;
+    --orchid: #c0a0c8;
     --champagne: #d8b57e;
-    --moss: #a8bd91;
-    --line: #432c55;
-    --line-strong: #5c3f72;
-    --wood: #53362c;
-    --wood-dark: #271721;
+    --moss: #aabd90;
+    --line: #574049;
+    --line-strong: #715460;
+    --wood: #6d4a37;
+    --wood-dark: #33211d;
     --lamp: #f2c979;
-    --paper: #f4e9f1;
+    --paper: #f6eadc;
     --paper-ink: #251531;
     --error: #d36d82;
     --correct: #8fba9a;
     --shadow: 0 22px 60px rgba(14, 5, 24, 0.38);
-    --room-wall-top: #170d26;
-    --room-wall-low: #6d3d62;
+    --room-wall-top: #2b1c2c;
+    --room-wall-low: #7a4a58;
   }
 }
 
