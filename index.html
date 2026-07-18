@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Typing Room</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="room-column" aria-label="Typing Room game">
+        <header class="topbar">
+          <div class="title-block">
+            <p class="eyebrow">Cozy typing practice</p>
+            <h1>Typing Room</h1>
+            <p class="project-note">
+              A small open-source typing speed and accuracy game with a typewriter soul.
+              <a href="https://github.com/jacilynh/typing-room" rel="noopener">View the code</a>.
+            </p>
+          </div>
+          <div class="run-summary" aria-label="Current run summary">
+            <div>
+              <span>WPM</span>
+              <strong id="wpm">0</strong>
+            </div>
+            <div>
+              <span>Accuracy</span>
+              <strong id="accuracyTop">100%</strong>
+            </div>
+            <div>
+              <span>Time</span>
+              <strong id="timer">60</strong>
+            </div>
+          </div>
+        </header>
+
+        <div class="office-stage">
+          <canvas id="roomCanvas" width="960" height="620" aria-label="Cozy office typing scene"></canvas>
+          <div class="typing-layer" aria-live="polite">
+            <div class="paper" id="paper">
+              <div class="paper-header">
+                <span id="modeKicker">Classic Sprint</span>
+                <span id="passageLabel">Literary</span>
+              </div>
+              <div id="passage" class="passage" tabindex="0" aria-label="Typing passage"></div>
+              <div class="caret-line">
+                <span id="caretNote">Press Start, then type here</span>
+                <span id="ribbonMeter" class="ribbon-meter"><span></span></span>
+              </div>
+            </div>
+          </div>
+          <div id="overlay" class="overlay">
+            <div class="overlay-panel">
+              <p id="overlayKicker">Ready</p>
+              <h2 id="overlayTitle">Settle into the typing room</h2>
+              <p id="overlayText">Choose a mode, then type the passage with as much speed and care as you can.</p>
+              <button id="startButton" class="primary-button" type="button">Start Typing</button>
+            </div>
+          </div>
+        </div>
+
+        <section class="desk-dock" aria-label="Typing controls">
+          <div class="answer-readout">
+            <span>Current</span>
+            <strong id="currentReadout">_</strong>
+          </div>
+          <div class="keyboard-preview" aria-label="Keyboard preview">
+            <div class="key-row">
+              <span>Q</span><span>W</span><span>E</span><span>R</span><span>T</span><span>Y</span><span>U</span><span>I</span><span>O</span><span>P</span>
+            </div>
+            <div class="key-row mid">
+              <span>A</span><span>S</span><span>D</span><span>F</span><span>G</span><span>H</span><span>J</span><span>K</span><span>L</span>
+            </div>
+            <div class="key-row low">
+              <span>Z</span><span>X</span><span>C</span><span>V</span><span>B</span><span>N</span><span>M</span>
+            </div>
+          </div>
+          <button id="restartButton" class="fire-button" type="button">Restart</button>
+        </section>
+      </section>
+
+      <aside class="side-panel" aria-label="Typing Room settings and progress">
+        <section class="panel-block controls-block">
+          <div class="section-heading">
+            <h2>Session</h2>
+            <button id="pauseButton" class="icon-button" type="button" aria-label="Pause or resume">II</button>
+          </div>
+
+          <div class="control-label">Mode</div>
+          <div class="segmented mode-segmented" role="group" aria-label="Typing mode">
+            <button type="button" class="active" data-mode="sprint">Classic Sprint</button>
+            <button type="button" data-mode="accuracy">Accuracy Garden</button>
+            <button type="button" data-mode="typewriter">Typewriter Room</button>
+          </div>
+
+          <div class="control-label">Length</div>
+          <div class="segmented" role="group" aria-label="Session length">
+            <button type="button" data-duration="30">30s</button>
+            <button type="button" class="active" data-duration="60">60s</button>
+            <button type="button" data-duration="180">3m</button>
+          </div>
+
+          <div class="control-label">Passage</div>
+          <div class="segmented passage-segmented" role="group" aria-label="Passage set">
+            <button type="button" class="active" data-passage="literary">Literary</button>
+            <button type="button" data-passage="notes">Notes</button>
+            <button type="button" data-passage="code">Code-ish</button>
+          </div>
+
+          <label class="toggle-row">
+            <span>Typewriter sound</span>
+            <input id="soundToggle" type="checkbox" checked>
+          </label>
+
+          <button id="dailyButton" class="secondary-button" type="button">Daily Passage</button>
+        </section>
+
+        <section class="panel-block">
+          <div class="section-heading">
+            <h2>Live Run</h2>
+            <span id="rankBadge" class="badge">Copyist</span>
+          </div>
+          <dl class="stat-grid">
+            <div>
+              <dt>Raw WPM</dt>
+              <dd id="rawWpm">0</dd>
+            </div>
+            <div>
+              <dt>Streak</dt>
+              <dd id="streak">0</dd>
+            </div>
+            <div>
+              <dt>Errors</dt>
+              <dd id="errors">0</dd>
+            </div>
+            <div>
+              <dt>Best</dt>
+              <dd id="bestWpm">0</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel-block">
+          <div class="section-heading">
+            <h2>Practice Notes</h2>
+            <button id="resetStats" class="text-button" type="button">Reset</button>
+          </div>
+          <div id="notesList" class="notes-list"></div>
+        </section>
+
+        <section class="panel-block compact">
+          <h2>Keyboard</h2>
+          <div class="shortcut-grid">
+            <span>Letters</span><strong>type passage</strong>
+            <span>Backspace</span><strong>delete</strong>
+            <span>Enter</span><strong>new line</strong>
+            <span>Escape</span><strong>pause</strong>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
