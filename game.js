@@ -34,6 +34,18 @@
     rank: document.getElementById("rankBadge"),
     notesList: document.getElementById("notesList"),
     resetStats: document.getElementById("resetStats"),
+    roomLevel: document.getElementById("roomLevel"),
+    roomPoints: document.getElementById("roomPoints"),
+    roomMeter: document.getElementById("roomMeter"),
+    unlockList: document.getElementById("unlockList"),
+    questReward: document.getElementById("questReward"),
+    questText: document.getElementById("questText"),
+    finishedPage: document.getElementById("finishedPage"),
+    finishedStamp: document.getElementById("finishedStamp"),
+    finishedStats: document.getElementById("finishedStats"),
+    finishedText: document.getElementById("finishedText"),
+    downloadPage: document.getElementById("downloadPage"),
+    nextQuest: document.getElementById("nextQuestButton"),
     keys: Array.from(document.querySelectorAll(".key-row span"))
   };
 
@@ -48,6 +60,11 @@
       label: "Accuracy Garden",
       readyTitle: "Let precision set the pace",
       readyText: "Mistakes cost more here. Keep the line clean and grow a careful streak."
+    },
+    correspondence: {
+      label: "Correspondence",
+      readyTitle: "Send a note from the desk",
+      readyText: "Type a small letter cleanly enough to seal it, stamp it, and add it to the stack."
     },
     typewriter: {
       label: "Typewriter Room",
@@ -66,12 +83,51 @@
       "The best desk has a lamp, a notebook, a patient keyboard, and enough quiet to hear an idea become real.",
       "Begin with one sentence. Let the next one follow. Momentum is often just attention with its sleeves rolled up."
     ],
+    letters: [
+      "Dear friend,\n\nThe lamp is on, the rain is polite, and I am sending this small proof that practice can feel like a room instead of a chore.\n\nWarmly,",
+      "Postcard from the desk:\n\nToday I learned that a sentence typed carefully has its own weather. The keys made a little music. I stayed for one more page.",
+      "Dear future self,\n\nKeep the good tools close. Keep the window cracked. Keep typing until the line begins to trust you."
+    ],
     code: [
       "const words = draft.trim().split(/\\s+/); return words.filter(Boolean).length;",
       "function measureAccuracy(input, target) { return input.length ? correct / input.length : 1; }",
       "await buildRoom({ mode: 'typewriter', sound: true, paper: 'warm', focus: 'accuracy' });"
     ]
   };
+  const unlocks = [
+    [0, "Lamp lit"],
+    [90, "Window plant"],
+    [210, "Porcelain teacup"],
+    [380, "Framed print"],
+    [620, "Brass letter opener"]
+  ];
+  const quests = [
+    {
+      label: "Finish one page.",
+      reward: 20,
+      test: (run) => run.finished
+    },
+    {
+      label: "Keep accuracy at 96% or better.",
+      reward: 35,
+      test: (run) => run.accuracy >= 96
+    },
+    {
+      label: "Type a Correspondence page.",
+      reward: 30,
+      test: (run) => run.mode === "correspondence"
+    },
+    {
+      label: "Finish with fewer than three errors.",
+      reward: 35,
+      test: (run) => run.errors < 3
+    },
+    {
+      label: "Reach a 30-character streak.",
+      reward: 40,
+      test: (run) => run.bestStreak >= 30
+    }
+  ];
   const ranks = [
     [0, "Copyist"],
     [35, "Typesetter"],
@@ -108,9 +164,16 @@
 
   function loadStats() {
     try {
-      return JSON.parse(localStorage.getItem(storeKey)) || { bestWpm: 0, runs: [] };
+      const saved = JSON.parse(localStorage.getItem(storeKey)) || {};
+      return {
+        bestWpm: saved.bestWpm || 0,
+        runs: saved.runs || [],
+        points: saved.points || 0,
+        questIndex: saved.questIndex || 0,
+        pages: saved.pages || 0
+      };
     } catch {
-      return { bestWpm: 0, runs: [] };
+      return { bestWpm: 0, runs: [], points: 0, questIndex: 0, pages: 0 };
     }
   }
 
@@ -145,7 +208,8 @@
   }
 
   function pickPassage(daily) {
-    const set = selectedPassageSet();
+    const mode = selectedMode();
+    const set = mode === "correspondence" ? "letters" : selectedPassageSet();
     const options = passages[set] || passages.literary;
     if (!daily) return options[Math.floor(Math.random() * options.length)];
     const dateSeed = Number(new Date().toISOString().slice(0, 10).replaceAll("-", ""));
@@ -182,7 +246,7 @@
     state.mode = selectedMode();
     state.duration = selectedDuration();
     state.timeLeft = state.duration;
-    state.passageSet = selectedPassageSet();
+    state.passageSet = state.mode === "correspondence" ? "letters" : selectedPassageSet();
     state.target = pickPassage(daily);
     state.typed = "";
     state.cursor = 0;
@@ -195,6 +259,7 @@
     state.elapsedMs = 0;
     state.strikes = [];
     state.dust = [];
+    els.finishedPage.classList.add("hidden");
     els.passage.focus();
     setOverlay(false);
     renderPassage();
@@ -207,25 +272,34 @@
     state.running = false;
     state.finished = true;
     const stats = currentStats();
+    const run = {
+      date: new Date().toISOString(),
+      mode: state.mode,
+      passageSet: state.passageSet,
+      wpm: Math.round(stats.wpm),
+      accuracy: Math.round(stats.accuracy * 1000) / 10,
+      errors: state.errors,
+      bestStreak: state.bestStreak,
+      finished: state.cursor >= state.target.length
+    };
+    const quest = currentQuest();
+    const questComplete = quest.test(run);
+    const basePoints = Math.max(8, Math.round(run.wpm / 3)) + Math.round(run.accuracy / 6);
+    const earned = basePoints + (questComplete ? quest.reward : 0);
     state.stats.bestWpm = Math.max(state.stats.bestWpm || 0, Math.round(stats.wpm));
-    state.stats.runs = [
-      {
-        date: new Date().toISOString(),
-        mode: state.mode,
-        passageSet: state.passageSet,
-        wpm: Math.round(stats.wpm),
-        accuracy: Math.round(stats.accuracy * 1000) / 10,
-        errors: state.errors
-      },
-      ...(state.stats.runs || [])
-    ].slice(0, 5);
+    state.stats.pages = (state.stats.pages || 0) + 1;
+    state.stats.points = (state.stats.points || 0) + earned;
+    if (questComplete) state.stats.questIndex = ((state.stats.questIndex || 0) + 1) % quests.length;
+    state.stats.runs = [run, ...(state.stats.runs || [])].slice(0, 5);
     saveStats();
     updateHud();
     renderNotes();
+    renderRoomProgress();
+    renderFinishedPage(run, earned, questComplete);
     setOverlay(
       true,
       `${Math.round(stats.wpm)} WPM at ${Math.round(stats.accuracy * 100)}%`,
-      `Best streak: ${state.bestStreak}. Errors: ${state.errors}. The page is ready for another pass.`,
+      `${questComplete ? "Quest complete. " : ""}+${earned} desk points. The finished page is waiting below the keyboard.`,
       "Session complete"
     );
   }
@@ -270,7 +344,7 @@
       return;
     }
     if (!state.running) {
-      if (event.key === " ") {
+      if (event.key === " " && !state.finished) {
         event.preventDefault();
         startRun(false);
       }
@@ -388,6 +462,7 @@
   }
 
   function labelForPassage(set) {
+    if (set === "letters") return "Letters";
     return set === "code" ? "Code-ish" : set[0].toUpperCase() + set.slice(1);
   }
 
@@ -401,6 +476,7 @@
     els.errors.textContent = state.errors;
     els.bestWpm.textContent = state.stats.bestWpm || 0;
     els.rank.textContent = rankFor(stats.wpm);
+    renderRoomProgress();
   }
 
   function rankFor(wpm) {
@@ -438,6 +514,113 @@
     }));
   }
 
+  function currentQuest() {
+    return quests[state.stats.questIndex % quests.length];
+  }
+
+  function roomLevel() {
+    const points = state.stats.points || 0;
+    return unlocks.reduce((level, unlock, index) => (points >= unlock[0] ? index + 1 : level), 1);
+  }
+
+  function nextUnlock() {
+    const points = state.stats.points || 0;
+    return unlocks.find((unlock) => unlock[0] > points);
+  }
+
+  function renderRoomProgress() {
+    const points = state.stats.points || 0;
+    const level = roomLevel();
+    const upcoming = nextUnlock();
+    const previousThreshold = unlocks[level - 1]?.[0] || 0;
+    const nextThreshold = upcoming?.[0] || Math.max(points, previousThreshold + 1);
+    const span = Math.max(1, nextThreshold - previousThreshold);
+    const progress = upcoming ? ((points - previousThreshold) / span) * 100 : 100;
+    const quest = currentQuest();
+
+    els.roomLevel.textContent = `Level ${level}`;
+    els.roomPoints.textContent = upcoming
+      ? `${points} desk points · ${nextThreshold - points} to ${upcoming[1]}`
+      : `${points} desk points · room complete`;
+    els.roomMeter.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+    els.questText.textContent = quest.label;
+    els.questReward.textContent = `+${quest.reward}`;
+    els.unlockList.replaceChildren(...unlocks.map(([threshold, label]) => {
+      const item = document.createElement("div");
+      item.className = "unlock-item";
+      const name = document.createElement("span");
+      name.textContent = label;
+      const status = document.createElement("strong");
+      status.textContent = points >= threshold ? "Unlocked" : `${threshold}`;
+      item.append(name, status);
+      return item;
+    }));
+  }
+
+  function renderFinishedPage(run, earned, questComplete) {
+    els.finishedPage.classList.remove("hidden");
+    els.finishedStamp.textContent = questComplete ? "Quest complete" : "Finished page";
+    els.finishedStats.textContent = `${run.wpm} WPM · ${run.accuracy}% · +${earned}`;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < state.target.length; i += 1) {
+      const span = document.createElement("span");
+      span.textContent = state.typed[i] || state.target[i];
+      if (state.typed[i] !== undefined && state.typed[i] !== state.target[i]) {
+        span.className = "wrong-mark";
+      }
+      frag.append(span);
+    }
+    els.finishedText.replaceChildren(frag);
+  }
+
+  function downloadFinishedPage() {
+    const stats = currentStats();
+    const exportCanvas = document.createElement("canvas");
+    const ratio = 2;
+    exportCanvas.width = 1200 * ratio;
+    exportCanvas.height = 1500 * ratio;
+    const out = exportCanvas.getContext("2d");
+    out.scale(ratio, ratio);
+    out.fillStyle = "#fffaf4";
+    out.fillRect(0, 0, 1200, 1500);
+    out.fillStyle = "rgba(184, 147, 90, 0.16)";
+    for (let y = 170; y < 1320; y += 44) out.fillRect(120, y, 960, 1);
+    out.fillStyle = "#b8935a";
+    out.font = "22px Georgia";
+    out.fillText("The Typing Room", 120, 110);
+    out.font = "18px Courier New";
+    out.fillText(`${Math.round(stats.wpm)} WPM · ${Math.round(stats.accuracy * 100)}% · ${state.errors} errors`, 120, 145);
+    out.fillStyle = "#33223d";
+    out.font = "28px Courier New";
+    wrapCanvasText(out, state.typed || state.target, 120, 230, 960, 44);
+    const link = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+    link.download = `typing-room-${date}.png`;
+    link.href = exportCanvas.toDataURL("image/png");
+    link.click();
+  }
+
+  function wrapCanvasText(out, text, x, y, maxWidth, lineHeight) {
+    const paragraphs = text.split("\n");
+    let currentY = y;
+    paragraphs.forEach((paragraph) => {
+      const words = paragraph.split(" ");
+      let line = "";
+      words.forEach((word) => {
+        const test = line ? `${line} ${word}` : word;
+        if (out.measureText(test).width > maxWidth && line) {
+          out.fillText(line, x, currentY);
+          currentY += lineHeight;
+          line = word;
+        } else {
+          line = test;
+        }
+      });
+      out.fillText(line, x, currentY);
+      currentY += lineHeight * 1.3;
+    });
+  }
+
   function drawRoom(dt) {
     const { w, h } = logicalSize();
     state.lampPhase += dt * 0.001;
@@ -453,6 +636,7 @@
     drawShelves(w, h);
     drawLamp(w, h);
     drawDesk(w, h);
+    drawUnlocks(w, h);
     drawTypewriter(w, h);
     drawParticles(dt);
   }
@@ -522,6 +706,59 @@
     ctx.fillStyle = "rgba(253, 247, 246, 0.12)";
     for (let i = 0; i < 8; i += 1) {
       ctx.fillRect(i * w * 0.15 - 30, deskY + 24 + Math.sin(i) * 8, w * 0.12, 2);
+    }
+  }
+
+  function hasUnlock(label) {
+    const found = unlocks.find((unlock) => unlock[1] === label);
+    return found ? (state.stats.points || 0) >= found[0] : false;
+  }
+
+  function drawUnlocks(w, h) {
+    const deskY = h * 0.72;
+    if (hasUnlock("Window plant")) {
+      ctx.fillStyle = cssColor("--moss");
+      ctx.beginPath();
+      ctx.ellipse(w * 0.83, deskY - h * 0.055, w * 0.028, h * 0.08, -0.6, 0, Math.PI * 2);
+      ctx.ellipse(w * 0.87, deskY - h * 0.055, w * 0.028, h * 0.08, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = cssColor("--champagne");
+      roundRect(w * 0.825, deskY - h * 0.025, w * 0.065, h * 0.06, 5);
+      ctx.fill();
+    }
+    if (hasUnlock("Porcelain teacup")) {
+      ctx.strokeStyle = "rgba(253, 247, 246, 0.7)";
+      ctx.lineWidth = 3;
+      ctx.fillStyle = "rgba(253, 247, 246, 0.82)";
+      roundRect(w * 0.08, deskY - h * 0.005, w * 0.07, h * 0.045, 8);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(w * 0.15, deskY + h * 0.017, 10, -1.2, 1.2);
+      ctx.stroke();
+    }
+    if (hasUnlock("Framed print")) {
+      ctx.fillStyle = "rgba(253, 247, 246, 0.14)";
+      ctx.strokeStyle = "rgba(184, 147, 90, 0.55)";
+      ctx.lineWidth = 2;
+      ctx.fillRect(w * 0.39, h * 0.1, w * 0.14, h * 0.16);
+      ctx.strokeRect(w * 0.39, h * 0.1, w * 0.14, h * 0.16);
+      ctx.beginPath();
+      ctx.moveTo(w * 0.415, h * 0.215);
+      ctx.lineTo(w * 0.455, h * 0.155);
+      ctx.lineTo(w * 0.49, h * 0.205);
+      ctx.stroke();
+    }
+    if (hasUnlock("Brass letter opener")) {
+      ctx.strokeStyle = cssColor("--champagne");
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.67, deskY + h * 0.08);
+      ctx.lineTo(w * 0.78, deskY + h * 0.035);
+      ctx.stroke();
+      ctx.fillStyle = cssColor("--champagne");
+      ctx.beginPath();
+      ctx.arc(w * 0.665, deskY + h * 0.082, 5, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -619,6 +856,10 @@
       setActive(els.modeButtons, button);
       const mode = modes[button.dataset.mode];
       setOverlay(true, mode.readyTitle, mode.readyText);
+      if (button.dataset.mode === "correspondence") {
+        const letters = els.passageButtons.find((passageButton) => passageButton.dataset.passage === "letters");
+        if (letters) setActive(els.passageButtons, letters);
+      }
     });
   });
   els.durationButtons.forEach((button) => {
@@ -631,10 +872,13 @@
   els.restart.addEventListener("click", () => startRun(false));
   els.daily.addEventListener("click", () => startRun(true));
   els.pause.addEventListener("click", togglePause);
+  els.downloadPage.addEventListener("click", downloadFinishedPage);
+  els.nextQuest.addEventListener("click", () => startRun(false));
   els.resetStats.addEventListener("click", () => {
-    state.stats = { bestWpm: 0, runs: [] };
+    state.stats = { bestWpm: 0, runs: [], points: 0, questIndex: 0, pages: 0 };
     saveStats();
     renderNotes();
+    renderRoomProgress();
     updateHud();
   });
   window.addEventListener("keydown", handleInput);
@@ -643,6 +887,7 @@
   state.target = passages.literary[0];
   renderPassage();
   renderNotes();
+  renderRoomProgress();
   updateHud();
   resizeCanvas();
   setOverlay(true, modes.sprint.readyTitle, modes.sprint.readyText);

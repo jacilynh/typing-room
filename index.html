@@ -77,6 +77,20 @@
           </div>
           <button id="restartButton" class="fire-button" type="button">Restart</button>
         </section>
+
+        <section id="finishedPage" class="finished-page hidden" aria-label="Finished typed page">
+          <div class="finished-sheet">
+            <div class="paper-header">
+              <span id="finishedStamp">Finished page</span>
+              <span id="finishedStats">0 WPM · 100%</span>
+            </div>
+            <div id="finishedText" class="finished-text"></div>
+            <div class="finished-actions">
+              <button id="downloadPage" class="secondary-button" type="button">Download Page</button>
+              <button id="nextQuestButton" class="secondary-button" type="button">Next Page</button>
+            </div>
+          </div>
+        </section>
       </section>
 
       <aside class="side-panel" aria-label="Typing Room settings and progress">
@@ -90,6 +104,7 @@
           <div class="segmented mode-segmented" role="group" aria-label="Typing mode">
             <button type="button" class="active" data-mode="sprint">Classic Sprint</button>
             <button type="button" data-mode="accuracy">Accuracy Garden</button>
+            <button type="button" data-mode="correspondence">Correspondence</button>
             <button type="button" data-mode="typewriter">Typewriter Room</button>
           </div>
 
@@ -104,6 +119,7 @@
           <div class="segmented passage-segmented" role="group" aria-label="Passage set">
             <button type="button" class="active" data-passage="literary">Literary</button>
             <button type="button" data-passage="notes">Notes</button>
+            <button type="button" data-passage="letters">Letters</button>
             <button type="button" data-passage="code">Code-ish</button>
           </div>
 
@@ -113,6 +129,26 @@
           </label>
 
           <button id="dailyButton" class="secondary-button" type="button">Daily Passage</button>
+        </section>
+
+        <section class="panel-block">
+          <div class="section-heading">
+            <h2>Room</h2>
+            <span id="roomLevel" class="badge">Level 1</span>
+          </div>
+          <div class="room-meter">
+            <span id="roomPoints">0 desk points</span>
+            <div class="meter"><span id="roomMeter"></span></div>
+          </div>
+          <div id="unlockList" class="unlock-list"></div>
+        </section>
+
+        <section class="panel-block">
+          <div class="section-heading">
+            <h2>Next Quest</h2>
+            <span id="questReward" class="badge">+20</span>
+          </div>
+          <div id="questText" class="quest-text">Finish one page.</div>
         </section>
 
         <section class="panel-block">

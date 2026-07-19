@@ -10,11 +10,13 @@ Source code: https://github.com/jacilynh/typing-room
 
 ## Current features
 
-- Three modes: Classic Sprint, Accuracy Garden, and Typewriter Room
+- Four modes: Classic Sprint, Accuracy Garden, Correspondence, and Typewriter Room
 - 30-second, 60-second, and 3-minute sessions
-- Passage sets for literary, notes, code-ish, and daily practice
+- Passage sets for literary, notes, letters, code-ish, and daily practice
 - Live WPM, accuracy, streak, error, and progress tracking
 - Typewriter-style paper, carriage, ribbon, strike animation, and optional sound
+- Finished-page keepsakes with proofreader marks and PNG download
+- Desk points, small quests, and cozy room unlocks that appear in the office scene
 - Daily challenge with a seeded passage
 - Local best score and run history
 - Keyboard-first play with simple on-screen controls

@@ -487,6 +487,50 @@ canvas {
   font-size: 11px;
 }
 
+.finished-page {
+  margin-top: 16px;
+}
+
+.finished-page.hidden {
+  display: none;
+}
+
+.finished-sheet {
+  padding: 24px;
+  border: 1px solid rgba(184, 147, 90, 0.45);
+  background:
+    linear-gradient(90deg, rgba(212, 99, 142, 0.07) 0 1px, transparent 1px 100%),
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(184, 147, 90, 0.1) 32px),
+    var(--paper);
+  color: var(--paper-ink);
+  box-shadow: var(--shadow);
+}
+
+.finished-text {
+  min-height: 120px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.finished-text .wrong-mark {
+  color: var(--error);
+  background: rgba(185, 79, 100, 0.12);
+  text-decoration: underline;
+  text-decoration-color: var(--error);
+  text-decoration-thickness: 1px;
+}
+
+.finished-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  margin-top: 20px;
+  border: 1px solid rgba(184, 147, 90, 0.35);
+  background: rgba(184, 147, 90, 0.35);
+}
+
 .side-panel {
   display: grid;
   align-content: start;
@@ -549,6 +593,10 @@ canvas {
   grid-template-columns: 1fr;
 }
 
+.passage-segmented {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .control-label {
   margin: 12px 0 8px;
 }
@@ -602,6 +650,46 @@ dd {
 .notes-list {
   display: grid;
   gap: 12px;
+}
+
+.room-meter {
+  display: grid;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-family: "IBM Plex Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.unlock-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.unlock-item,
+.quest-text {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.unlock-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+  border-top: 1px solid var(--line);
+}
+
+.unlock-item strong {
+  color: var(--champagne);
+  font-family: "IBM Plex Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .note-item {
@@ -711,6 +799,10 @@ dd {
   .keyboard-preview {
     min-height: 112px;
     padding-inline: 10px;
+  }
+
+  .finished-actions {
+    grid-template-columns: 1fr;
   }
 
   .side-panel {
